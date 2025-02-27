@@ -83,9 +83,9 @@ def create_templated_video(input_video_path, text_string, output_path, template_
         cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    input_video = "/Users/shanyu/Documents/Davis/ASA/Soccer/input_video.mp4"
-    template_image = "/Users/shanyu/Documents/Davis/ASA/Soccer/template.png"
-    output_video = "/Users/shanyu/Documents/Davis/ASA/Soccer/output_video.mp4"
+    input_video = os.path.join(os.path.dirname(__file__), "input_video.mp4")
+    template_image = os.path.join(os.path.dirname(__file__), "template.png")
+    output_video = os.path.join(os.path.dirname(__file__), "output_video.mp4")
     text_to_add = "Your Text Here"
     
     create_templated_video(input_video, text_to_add, output_video, template_image, video_pos=(85, 250))
