@@ -34,7 +34,7 @@ export default function Home() {
             <Upload className="w-12 h-12 text-[#002855] mb-4 mx-auto" />
             <h3 className="text-xl font-semibold mb-2 text-center">Upload Game Footage</h3>
             <p className="text-gray-600 text-center">
-              Simply upload your soccer match recordings using mp4 format
+              Simply upload your soccer match recordings in any common video format
             </p>
           </Card>
           <Card className="p-6 border-2 border-[#002855]">
