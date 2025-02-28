@@ -91,7 +91,7 @@ export default function Home() {
           <img
             src="/images/davismensteam.jpg"
             alt="UC Davis Athletics"
-            className="w-full h-[350px] object-contain mx-auto mb-4 rounded-lg"  // Adjust height as needed
+            className="w-full h-[350px] object-cover mx-auto mb-4 rounded-lg"  // Adjust height as needed
           />
         </div>
         <div className="container mx-auto text-center">

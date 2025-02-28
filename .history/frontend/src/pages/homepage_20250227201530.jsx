@@ -87,11 +87,11 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="bg-gray-200 py-8">
-        <div className="container mx-auto">
+        <div className="w-full">
           <img
             src="/images/davismensteam.jpg"
             alt="UC Davis Athletics"
-            className="w-full h-[350px] object-contain mx-auto mb-4 rounded-lg"  // Adjust height as needed
+            className="w-full h-auto object-cover mx-auto mb-4"
           />
         </div>
         <div className="container mx-auto text-center">
@@ -100,7 +100,6 @@ export default function Home() {
           </p>
         </div>
       </footer>
-
 
     </div>
   )

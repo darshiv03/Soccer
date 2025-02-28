@@ -8,11 +8,11 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
       <div className="relative h-[60vh] bg-[#002855]">
-        {/* <img
+        <img
           src="/images/placeholder-hero.jpg"
           alt="UC Davis Men's Soccer Team"
           className="w-full h-full object-cover opacity-50"
-        /> */}
+        />
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center text-white">
             <h1 className="text-5xl font-bold mb-4">UC Davis Soccer Highlights AI</h1>
@@ -87,21 +87,13 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="bg-gray-200 py-8">
-        <div className="container mx-auto">
-          <img
-            src="/images/davismensteam.jpg"
-            alt="UC Davis Athletics"
-            className="w-full h-[350px] object-contain mx-auto mb-4 rounded-lg"  // Adjust height as needed
-          />
-        </div>
         <div className="container mx-auto text-center">
+          <img src="/images/uc-davis-athletics-logo.png" alt="UC Davis Athletics" className="mx-auto mb-4 h-16" />
           <p className="text-sm text-gray-600">
             © 2025 MediaIt - Official highlight generation tool for UC Davis Men's Soccer by Aggie Sports Analytics
           </p>
         </div>
       </footer>
-
-
     </div>
   )
 }
