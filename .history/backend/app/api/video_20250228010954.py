@@ -1,0 +1,102 @@
+# # app/api/video.py
+# from fastapi import APIRouter, UploadFile, File, HTTPException
+# from fastapi.responses import FileResponse
+# import shutil
+# import os
+# from app.services.video_service import create_templated_video
+
+# # Create a router for video-related endpoints
+# router = APIRouter()
+
+# # Define the API route for video generation
+# @router.post("/generate_video/")
+# async def generate_video(video_file: UploadFile = File(...), text_string: str = ""):
+#     try:
+#         # Save the uploaded video to a temporary location
+#         temp_video_path = f"temp_{video_file.filename}"
+#         with open(temp_video_path, "wb") as video_buffer:
+#             shutil.copyfileobj(video_file.file, video_buffer)
+
+#         # Define the output path for the generated video
+#         output_path = "generated_videos/generated_output_video.mp4"  # Ensure this directory exists
+
+#         # Call the video processing service
+#         create_templated_video(temp_video_path, text_string, output_path, "template.png", video_pos=(85, 250))
+
+#         # Return the generated video as a response
+#         return FileResponse(output_path, media_type="video/mp4", filename="generated_output_video.mp4")
+
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
+
+#     finally:
+#         # Clean up temporary files
+#         if os.path.exists(temp_video_path):
+#             os.remove(temp_video_path)
+
+
+
+############################################################################################
+
+# app/api/video.py
+# from fastapi import APIRouter, UploadFile, File
+# from fastapi.responses import FileResponse
+# import os
+# from app.services.video_service import process_video
+
+# router = APIRouter()
+
+# @router.post("/generate_video/")
+# async def generate_video(video_file: UploadFile = File(...)):
+#     try:
+#         # Save the uploaded video to a temporary file
+#         temp_video_path = f"temp_{video_file.filename}"
+#         with open(temp_video_path, "wb") as buffer:
+#             shutil.copyfileobj(video_file.file, buffer)
+        
+#         # Define the output path where the processed video will be saved
+#         output_video_path = "generated_videos/generated_output_video.mp4"
+
+#         # Process the video (just copy for now)
+#         process_video(temp_video_path, output_video_path)
+
+#         # Return the generated video as a response
+#         return FileResponse(output_video_path, media_type="video/mp4", filename="generated_output_video.mp4")
+#     except Exception as e:
+#         return {"error": str(e)}
+
+
+
+
+
+
+# app/api/video.py
+from fastapi import APIRouter, UploadFile, File
+from fastapi.responses import FileResponse
+import os
+import shutil
+from app.services.video_service import process_video
+
+router = APIRouter()
+
+@router.post("/generate_video/")
+async def generate_video(video_file: UploadFile = File(...)):
+    try:
+        # Save the uploaded video to a temporary file
+        temp_video_path = f"temp_{video_file.filename}"
+        with open(temp_video_path, "wb") as buffer:
+            shutil.copyfileobj(video_file.file, buffer)
+        
+        # Define the output path where the processed video will be saved
+        output_video_path = "generated_videos/generated_output_video.mp4"
+        template_image_path = "template.png"  # Make sure this template image exists
+
+        # Process the video (apply overlay and text)
+        process_video(temp_video_path, output_video_path, template_image_path, "Your Custom Text Here")
+
+        # Return the generated video as a response
+        return FileResponse(output_video_path, media_type="video/mp4", filename="generated_output_video.mp4")
+    except Exception as e:
+        return {"error": str(e)}
+
+
