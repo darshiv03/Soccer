@@ -2,28 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { Card } from "../components/ui/card";
-import { Button } from "../components/ui/button";
 import axios from "axios";
 
 export default function History() {
   const [history, setHistory] = useState([]);
-  const [expandedVideo, setExpandedVideo] = useState(null); // Track expanded state
 
   useEffect(() => {
     // Fetch history from the backend
     const fetchHistory = async () => {
       try {
         const response = await axios.get("http://127.0.0.1:8000/api/history/");
-        if (response.data && Array.isArray(response.data)) {
-          setHistory(response.data);
-        } else {
-          console.error("Invalid history response:", response.data);
-        }
+        setHistory(response.data);
       } catch (error) {
         console.error("Error fetching history:", error);
       }
     };
-
     fetchHistory();
   }, []);
 
@@ -39,22 +32,14 @@ export default function History() {
               <Card key={index} className="p-4">
                 <h3 className="font-semibold text-[#002855]">{item.query}</h3>
                 <p className="text-gray-600">Clips generated: {item.num_clips}</p>
-
-                <Button
-                  className="mt-2 text-blue-500"
-                  onClick={() => setExpandedVideo(expandedVideo === index ? null : index)}
+                <a 
+                  href={item.video_url} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-blue-500 underline"
                 >
-                  {expandedVideo === index ? "Hide Video ▲" : "Show Video ▼"}
-                </Button>
-
-                {expandedVideo === index && (
-                  <div className="mt-4 max-w-lg mx-auto">
-                    <video controls className="w-full h-auto rounded-lg shadow-lg">
-                      <source src={item.video_url} type="video/mp4" />
-                      Your browser does not support the video tag.
-                    </video>
-                  </div>
-                )}
+                  Watch Video
+                </a>
               </Card>
             ))}
           </div>

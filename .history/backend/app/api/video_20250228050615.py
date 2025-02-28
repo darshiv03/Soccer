@@ -32,7 +32,7 @@ async def generate_video(video_file: UploadFile = File(...), text_string: str = 
         print(error_msg)
         return {"error": error_msg}
 
-# @router.get("/history/")
-# async def fetch_history():
-#     """ Fetches the stored video generation history """
-#     return get_history()
+@router.get("/history/")
+async def fetch_history():
+    """ Fetches the stored video generation history """
+    return get_history()

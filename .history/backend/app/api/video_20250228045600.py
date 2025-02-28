@@ -14,13 +14,14 @@ async def generate_video(video_file: UploadFile = File(...), text_string: str = 
             f.write(await video_file.read())
 
         template_path = "static/template.png"
+        # This output_path is a placeholder; create_templated_video generates a unique filename.
         output_path = "static/generated_videos/generated_output_video.mp4"
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
         final_video_path = create_templated_video(input_video_path, text_string, output_path, template_path, video_pos=(85, 250))
         video_filename = final_video_path.split(os.path.sep)[-1]  # Extract filename
         video_url = f"http://127.0.0.1:8000/static/generated_videos/{video_filename}"
-
+        
         # Save query to history
         save_to_history(text_string, video_filename, num_clips=1)
 
@@ -32,7 +33,7 @@ async def generate_video(video_file: UploadFile = File(...), text_string: str = 
         print(error_msg)
         return {"error": error_msg}
 
-# @router.get("/history/")
-# async def fetch_history():
-#     """ Fetches the stored video generation history """
-#     return get_history()
+@router.get("/history/")
+async def fetch_history():
+    """ Fetches the stored video generation history """
+    return get_history()

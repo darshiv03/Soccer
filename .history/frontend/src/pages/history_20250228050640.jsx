@@ -14,16 +14,11 @@ export default function History() {
     const fetchHistory = async () => {
       try {
         const response = await axios.get("http://127.0.0.1:8000/api/history/");
-        if (response.data && Array.isArray(response.data)) {
-          setHistory(response.data);
-        } else {
-          console.error("Invalid history response:", response.data);
-        }
+        setHistory(response.data);
       } catch (error) {
         console.error("Error fetching history:", error);
       }
     };
-
     fetchHistory();
   }, []);
 
