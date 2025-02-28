@@ -33,15 +33,14 @@ export default function Generator() {
     try {
       const response = await axios.post('http://127.0.0.1:8000/api/generate_video/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        responseType: 'json',
       });
-      console.log("API response:", response.data);
-      if (response.data.video_url) {
-        // Append a timestamp for cache busting.
-        const videoUrl = response.data.video_url + `?t=${Date.now()}`;
-        console.log("Received unique video URL:", videoUrl);
+      if (response.status === 200) {
+        // Append a timestamp to bypass caching issues
+        const videoUrl = `http://127.0.0.1:8000/static/generated_videos/generated_output_video.mp4?t=${Date.now()}`;
         setGeneratedVideo(videoUrl);
       } else {
-        console.error("Error generating video", response.data);
+        console.error("Error generating video", response);
       }
     } catch (error) {
       console.error("Error:", error);
@@ -124,6 +123,7 @@ export default function Generator() {
             </video>
           </div>
         )}
+
       </div>
     </div>
   );

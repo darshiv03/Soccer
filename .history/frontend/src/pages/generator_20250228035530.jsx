@@ -34,11 +34,9 @@ export default function Generator() {
       const response = await axios.post('http://127.0.0.1:8000/api/generate_video/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      console.log("API response:", response.data);
       if (response.data.video_url) {
-        // Append a timestamp for cache busting.
+        // Append a timestamp for cache busting
         const videoUrl = response.data.video_url + `?t=${Date.now()}`;
-        console.log("Received unique video URL:", videoUrl);
         setGeneratedVideo(videoUrl);
       } else {
         console.error("Error generating video", response.data);
@@ -117,7 +115,9 @@ export default function Generator() {
               preload="auto"
               className="w-full max-w-4xl mx-auto"
               onLoadedData={() => console.log("Video loaded")}
-              onError={(e) => console.error("Video error:", e.target.error)}
+              onError={(e) => {
+                console.error("Video error:", e.target.error);
+              }}
             >
               <source src={generatedVideo} type="video/mp4" />
               Your browser does not support the video tag.

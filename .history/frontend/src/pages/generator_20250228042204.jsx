@@ -11,6 +11,7 @@ export default function Generator() {
   const [message, setMessage] = useState("");
   const [file, setFile] = useState(null);
   const [generatedVideo, setGeneratedVideo] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const handleFileChange = (event) => {
     setFile(event.target.files[0]);
@@ -27,6 +28,7 @@ export default function Generator() {
 
   const handleSubmit = async () => {
     if (!file || !message) return;
+    setLoading(true);
     const formData = new FormData();
     formData.append("video_file", file);
     formData.append("text_string", message);
@@ -36,7 +38,6 @@ export default function Generator() {
       });
       console.log("API response:", response.data);
       if (response.data.video_url) {
-        // Append a timestamp for cache busting.
         const videoUrl = response.data.video_url + `?t=${Date.now()}`;
         console.log("Received unique video URL:", videoUrl);
         setGeneratedVideo(videoUrl);
@@ -45,6 +46,8 @@ export default function Generator() {
       }
     } catch (error) {
       console.error("Error:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -97,13 +100,19 @@ export default function Generator() {
               <Button
                 size="icon"
                 className="bg-[#002855] hover:bg-[#003366]"
-                disabled={!file || !message}
+                disabled={!file || !message || loading}
                 onClick={handleSubmit}
               >
                 <Send className="h-4 w-4" />
                 <span className="sr-only">Send</span>
               </Button>
             </div>
+            {loading && (
+              <div className="mt-4 text-center">
+                <p>Loading video...</p>
+                {/* You can replace this with a spinner or animation */}
+              </div>
+            )}
           </div>
         </Card>
 

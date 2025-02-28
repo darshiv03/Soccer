@@ -13,16 +13,22 @@ async def generate_video(video_file: UploadFile = File(...), text_string: str = 
         with open(input_video_path, "wb") as f:
             f.write(await video_file.read())
 
+        # Define paths (these will be converted to absolute in the service)
         template_path = "static/template.png"
-        # The output path here is a placeholder; the service will generate a unique file name.
         output_path = "static/generated_videos/generated_output_video.mp4"
 
+        # Ensure the output directory exists
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
-        final_video_path = create_templated_video(input_video_path, text_string, output_path, template_path, video_pos=(85, 250))
+        # Process the video
+        create_templated_video(input_video_path, text_string, output_path, template_path, video_pos=(85, 250))
 
-        # Return the generated video with proper media type and cache-control header.
-        return FileResponse(final_video_path, media_type="video/mp4", headers={"Cache-Control": "no-store"})
+        # Return the generated video with proper media type and cache-control header
+        return FileResponse(
+            output_path,
+            media_type="video/mp4",
+            headers={"Cache-Control": "no-store"}
+        )
 
     except Exception as e:
         return {"error": f"An error occurred: {str(e)}"}

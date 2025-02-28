@@ -1,52 +1,60 @@
-"use client";
+"use client"
 
-import { useState } from "react";
+import { useState } from "react"
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Input } from "../components/ui/input";
-import { Send, Upload } from "lucide-react";
-import axios from "axios";
+import { Send, Upload } from "lucide-react"
+import axios from 'axios'; // Import Axios
 
 export default function Generator() {
-  const [message, setMessage] = useState("");
-  const [file, setFile] = useState(null);
-  const [generatedVideo, setGeneratedVideo] = useState(null);
+  const [message, setMessage] = useState("")
+  const [file, setFile] = useState(null)
+  const [generatedVideo, setGeneratedVideo] = useState(null) // To store and display the generated video
 
   const handleFileChange = (event) => {
-    setFile(event.target.files[0]);
-  };
+    const selectedFile = event.target.files[0]
+    setFile(selectedFile)
+  }
 
   const handleDrop = (event) => {
-    event.preventDefault();
-    setFile(event.dataTransfer.files[0]);
-  };
+    event.preventDefault()
+    const droppedFile = event.dataTransfer.files[0]
+    setFile(droppedFile)
+  }
 
   const handleDragOver = (event) => {
-    event.preventDefault();
-  };
+    event.preventDefault()
+  }
 
+  // Function to handle the video submission using Axios
   const handleSubmit = async () => {
     if (!file || !message) return;
+
     const formData = new FormData();
-    formData.append("video_file", file);
-    formData.append("text_string", message);
+    formData.append("video_file", file);  // Attach the video file
+    formData.append("text_string", message);  // Attach the message
+
     try {
+      // Send the request to the backend using Axios
       const response = await axios.post('http://127.0.0.1:8000/api/generate_video/', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
-      console.log("API response:", response.data);
-      if (response.data.video_url) {
-        // Append a timestamp for cache busting.
-        const videoUrl = response.data.video_url + `?t=${Date.now()}`;
-        console.log("Received unique video URL:", videoUrl);
-        setGeneratedVideo(videoUrl);
+
+      if (response.status === 200) {
+        // Get the video blob from the response
+        const videoBlob = new Blob([response.data], { type: 'video/mp4' });
+        const videoUrl = URL.createObjectURL(videoBlob);  // Create a URL for the video
+        setGeneratedVideo(videoUrl);  // Update the state to display the video
       } else {
-        console.error("Error generating video", response.data);
+        console.error('Error generating video', response);
       }
     } catch (error) {
-      console.error("Error:", error);
+      console.error('Error:', error);
     }
-  };
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -80,13 +88,12 @@ export default function Generator() {
                       className="hidden"
                       id="video-upload"
                     />
-                    <Button onClick={() => document.getElementById("video-upload").click()}>
-                      Choose File
-                    </Button>
+                    <Button onClick={() => document.getElementById("video-upload").click()}>Choose File</Button>
                   </>
                 )}
               </div>
             </div>
+
             <div className="flex gap-2">
               <Input
                 placeholder="Type your instructions for the highlight clip..."
@@ -107,24 +114,18 @@ export default function Generator() {
           </div>
         </Card>
 
+        {/* Display the generated video if available */}
         {generatedVideo && (
           <div className="mt-8 text-center">
             <h2 className="text-xl font-semibold text-[#002855] mb-4">Generated Video</h2>
             <video
-              key={generatedVideo}
-              crossOrigin="anonymous"
+              src={generatedVideo}
               controls
-              preload="auto"
               className="w-full max-w-4xl mx-auto"
-              onLoadedData={() => console.log("Video loaded")}
-              onError={(e) => console.error("Video error:", e.target.error)}
-            >
-              <source src={generatedVideo} type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
+            />
           </div>
         )}
       </div>
     </div>
-  );
+  )
 }

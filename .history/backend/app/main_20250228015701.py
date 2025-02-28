@@ -5,7 +5,6 @@ from app.api.video import router as video_router
 
 app = FastAPI()
 
-# CORS Middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Allow all origins

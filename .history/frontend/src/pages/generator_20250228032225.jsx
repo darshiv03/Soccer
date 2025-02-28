@@ -33,15 +33,14 @@ export default function Generator() {
     try {
       const response = await axios.post('http://127.0.0.1:8000/api/generate_video/', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        responseType: 'json',
       });
-      console.log("API response:", response.data);
-      if (response.data.video_url) {
-        // Append a timestamp for cache busting.
-        const videoUrl = response.data.video_url + `?t=${Date.now()}`;
-        console.log("Received unique video URL:", videoUrl);
+      if (response.status === 200) {
+        // Append a timestamp to bypass caching issues
+        const videoUrl = `http://127.0.0.1:8000/static/generated_videos/generated_output_video.mp4?t=${Date.now()}`;
         setGeneratedVideo(videoUrl);
       } else {
-        console.error("Error generating video", response.data);
+        console.error("Error generating video", response);
       }
     } catch (error) {
       console.error("Error:", error);
@@ -110,15 +109,7 @@ export default function Generator() {
         {generatedVideo && (
           <div className="mt-8 text-center">
             <h2 className="text-xl font-semibold text-[#002855] mb-4">Generated Video</h2>
-            <video
-              key={generatedVideo}
-              crossOrigin="anonymous"
-              controls
-              preload="auto"
-              className="w-full max-w-4xl mx-auto"
-              onLoadedData={() => console.log("Video loaded")}
-              onError={(e) => console.error("Video error:", e.target.error)}
-            >
+            <video controls preload="auto" className="w-full max-w-4xl mx-auto">
               <source src={generatedVideo} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
