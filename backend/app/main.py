@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.api.video import router as video_router
+from app.api.auth import router as auth_router
 
 app = FastAPI()
 
@@ -17,5 +18,6 @@ app.add_middleware(
 # Serve static files from the 'static' directory
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Include video processing routes
+# Include routers
 app.include_router(video_router, prefix="/api", tags=["Video"])
+app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])

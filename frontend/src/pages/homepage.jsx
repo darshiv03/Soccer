@@ -2,8 +2,11 @@ import { Link } from "react-router-dom"
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Upload, Camera, Send } from "lucide-react"
+import { useAuth } from "../contexts/AuthContext";
 
 export default function Home() {
+  const { user } = useAuth();
+
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
@@ -17,11 +20,15 @@ export default function Home() {
           <div className="text-center text-white">
             <h1 className="text-5xl font-bold mb-4">UC Davis Soccer Highlights AI</h1>
             <p className="text-xl mb-8">Transform your game footage into engaging highlights</p>
-            <Link to="/generator">
-              <Button size="lg" className="bg-[#FFBF00] text-[#002855] hover:bg-[#FFD700]">
-                Get Started
-              </Button>
-            </Link>
+            {user ? (
+              <Link to="/generator">
+                <Button size="lg" className="bg-[#FFBF00] text-[#002855] hover:bg-[#FFD700]">
+                  Get Started
+                </Button>
+              </Link>
+            ) : (
+              <p className="text-lg">Please log in to access the highlight generator</p>
+            )}
           </div>
         </div>
       </div>
@@ -77,11 +84,15 @@ export default function Home() {
         <div className="container mx-auto text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to Create Amazing Highlights?</h2>
           <p className="mb-8">Join MediaIt and take your UC Davis soccer content to the next level</p>
-          <Link to="/generator">
-            <Button size="lg" className="bg-[#FFBF00] text-[#002855] hover:bg-[#FFD700]">
-              Start Generating Highlights
-            </Button>
-          </Link>
+          {user ? (
+            <Link to="/generator">
+              <Button size="lg" className="bg-[#FFBF00] text-[#002855] hover:bg-[#FFD700]">
+                Start Generating Highlights
+              </Button>
+            </Link>
+          ) : (
+            <p className="text-lg">Please log in to get started</p>
+          )}
         </div>
       </div>
 

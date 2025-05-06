@@ -1,7 +1,12 @@
-
 # requirements.txt
 opencv-python==4.9.0.80
 numpy==1.26.4
 pillow==10.2.0
 fastapi
 uvicorn
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
