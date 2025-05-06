@@ -1,12 +1,19 @@
-from fastapi import APIRouter, File, UploadFile
+from fastapi import APIRouter, File, UploadFile, Depends
 from app.services.video_service import create_templated_video
 from app.services.history_service import save_to_history, get_history
+from app.middleware.auth import JWTAuthMiddleware
+from fastapi.security import HTTPAuthorizationCredentials
 import os
 
 router = APIRouter()
+auth_middleware = JWTAuthMiddleware()
 
 @router.post("/generate_video/")
-async def generate_video(video_file: UploadFile = File(...), text_string: str = ""):
+async def generate_video(
+    video_file: UploadFile = File(...), 
+    text_string: str = "",
+    credentials: HTTPAuthorizationCredentials = Depends(auth_middleware)
+):
     try:
         # Save uploaded video temporarily (relative to project root)
         input_video_path = "temp_input_video.mp4"
@@ -32,7 +39,7 @@ async def generate_video(video_file: UploadFile = File(...), text_string: str = 
         print(error_msg)
         return {"error": error_msg}
 
-# @router.get("/history/")
-# async def fetch_history():
-#     """ Fetches the stored video generation history """
-#     return get_history()
+@router.get("/history/")
+async def fetch_history(credentials: HTTPAuthorizationCredentials = Depends(auth_middleware)):
+    """ Fetches the stored video generation history """
+    return get_history()
