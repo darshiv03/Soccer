@@ -10,7 +10,7 @@ if not JWT_SECRET:
     raise ValueError("JWT_SECRET environment variable is not set")
 
 JWT_ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 60  # Changed to 1 hour
 
 # Google OAuth Configuration
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")

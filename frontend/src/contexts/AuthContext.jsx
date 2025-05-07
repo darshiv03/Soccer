@@ -7,7 +7,16 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const navigate = useNavigate();
+
+  const handleTokenExpiration = () => {
+    // Clear everything
+    localStorage.removeItem('token');
+    delete axios.defaults.headers.common['Authorization'];
+    setUser(null);
+    setShowLoginModal(true);
+  };
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -22,24 +31,35 @@ export const AuthProvider = ({ children }) => {
           if (response.data.valid) {
             setUser(response.data.user);
           } else {
-            // Token is invalid, clear everything
-            localStorage.removeItem('token');
-            delete axios.defaults.headers.common['Authorization'];
-            setUser(null);
+            handleTokenExpiration();
           }
         }
       } catch (error) {
         console.error('Auth initialization failed:', error);
-        // Clear everything on error
-        localStorage.removeItem('token');
-        delete axios.defaults.headers.common['Authorization'];
-        setUser(null);
+        handleTokenExpiration();
       } finally {
         setLoading(false);
       }
     };
 
     initializeAuth();
+  }, []);
+
+  // Add axios interceptor to handle 401/403 responses
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          handleTokenExpiration();
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
   }, []);
 
   const login = async (googleToken) => {
@@ -55,6 +75,7 @@ export const AuthProvider = ({ children }) => {
       axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
       
       setUser(user_info);
+      setShowLoginModal(false);
       return true;
     } catch (error) {
       console.error('Login error:', error);
@@ -67,6 +88,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
     delete axios.defaults.headers.common['Authorization'];
     setUser(null);
+    setShowLoginModal(false);
     navigate('/');
   };
 
@@ -77,7 +99,14 @@ export const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      login, 
+      logout, 
+      loading, 
+      showLoginModal, 
+      setShowLoginModal 
+    }}>
       {children}
     </AuthContext.Provider>
   );

@@ -6,6 +6,7 @@ import Home from "./pages/homepage"
 import Generator from "./pages/generator"
 import History from "./pages/history"
 import ProtectedRoute from "./components/ProtectedRoute"
+import LoginModal from "./components/LoginModal"
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <AuthProvider>
           <div className="App">
             <Navbar />
+            <LoginModal />
             <Routes>
               <Route path="/" element={<Home />} />
               <Route 
