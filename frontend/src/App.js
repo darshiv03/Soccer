@@ -10,8 +10,8 @@ import ProtectedRoute from "./components/ProtectedRoute"
 function App() {
   return (
     <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
-      <AuthProvider>
-        <Router>
+      <Router>
+        <AuthProvider>
           <div className="App">
             <Navbar />
             <Routes>
@@ -27,8 +27,8 @@ function App() {
               <Route path="/history" element={<History />} />
             </Routes>
           </div>
-        </Router>
-      </AuthProvider>
+        </AuthProvider>
+      </Router>
     </GoogleOAuthProvider>
   )
 }

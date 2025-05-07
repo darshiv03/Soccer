@@ -2,10 +2,7 @@ from fastapi import HTTPException, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt, JWTError
 from datetime import datetime
-import os
-
-JWT_SECRET = os.getenv("JWT_SECRET", "your-secret-key")
-JWT_ALGORITHM = "HS256"
+from app.config import JWT_SECRET, JWT_ALGORITHM
 
 class JWTAuthMiddleware(HTTPBearer):
     def __init__(self, auto_error: bool = True):
@@ -31,4 +28,8 @@ class JWTAuthMiddleware(HTTPBearer):
                 return False
             return True
         except JWTError:
-            return False 
+            return False
+
+    def verify(self, token: str) -> bool:
+        """Public method to verify a token string directly"""
+        return self.verify_jwt(token) 

@@ -1,15 +1,14 @@
 from google.oauth2 import id_token
 from google.auth.transport import requests
 from fastapi import HTTPException
-import os
 from datetime import datetime, timedelta
 from jose import jwt
-
-# These should be in your environment variables
-GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
-JWT_SECRET = os.getenv("JWT_SECRET", "your-secret-key")  # Change this in production
-JWT_ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+from app.config import (
+    JWT_SECRET,
+    JWT_ALGORITHM,
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    GOOGLE_CLIENT_ID
+)
 
 async def verify_google_token(token: str):
     try:
@@ -40,7 +39,22 @@ def create_access_token(user_info: dict):
     to_encode = {
         "sub": user_info["sub"],
         "email": user_info["email"],
-        "exp": expire
+        "name": user_info.get("name", ""),
+        "picture": user_info.get("picture", ""),
+        "exp": int(expire.timestamp())  # Convert to Unix timestamp
     }
     encoded_jwt = jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
-    return encoded_jwt 
+    return encoded_jwt
+
+def get_user_from_token(token: str) -> dict:
+    """Extract user information from a JWT token"""
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        return {
+            "email": payload["email"],
+            "name": payload.get("name", ""),
+            "picture": payload.get("picture", ""),
+            "sub": payload["sub"]
+        }
+    except jwt.JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token") 
