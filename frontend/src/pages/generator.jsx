@@ -4,9 +4,10 @@ import { useState } from "react";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Input } from "../components/ui/input";
-import { Send, Upload, Loader2 } from "lucide-react";
+import { Send, Upload } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
+import VideoLoadingScreen from "../components/VideoLoadingScreen";
 
 export default function Generator() {
   const [message, setMessage] = useState("");
@@ -162,11 +163,7 @@ export default function Generator() {
                 disabled={!file || !message || isLoading}
                 onClick={handleSubmit}
               >
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
+                <Send className="h-4 w-4" />
                 <span className="sr-only">Send</span>
               </Button>
             </div>
@@ -177,12 +174,7 @@ export default function Generator() {
               </div>
             )}
 
-            {isLoading && (
-              <div className="mt-8 text-center">
-                <Loader2 className="h-8 w-8 animate-spin mx-auto text-[#002855]" />
-                <p className="mt-2 text-gray-600">Generating your highlight video...</p>
-              </div>
-            )}
+            {isLoading && <VideoLoadingScreen />}
 
             {generatedVideo && !isLoading && (
               <div className="mt-8">
