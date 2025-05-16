@@ -1,4 +1,4 @@
-from fastapi import APIRouter, File, UploadFile, Depends, HTTPException
+from fastapi import APIRouter, File, UploadFile, Depends, HTTPException, Form
 from app.services.video_service import create_templated_video
 from app.services.history_service import save_to_history, get_history
 from app.middleware.auth import JWTAuthMiddleware
@@ -12,16 +12,19 @@ auth_middleware = JWTAuthMiddleware()
 @router.post("/video/generate")
 async def generate_video(
     file: UploadFile = File(...),
-    prompt: str = "",
-    negative_prompt: str = "",
-    num_inference_steps: int = 20,
-    guidance_scale: float = 7.5,
-    num_frames: int = 24,
-    fps: int = 24,
-    seed: Optional[int] = None,
+    prompt: str = Form(...),
+    negative_prompt: str = Form(""),
+    num_inference_steps: int = Form(20),
+    guidance_scale: float = Form(7.5),
+    num_frames: int = Form(24),
+    fps: int = Form(24),
+    seed: Optional[int] = Form(None),
     credentials: HTTPAuthorizationCredentials = Depends(auth_middleware)
 ):
     try:
+        # Debug logging for prompt
+        print(f"Received prompt: '{prompt}'")
+        
         # Save uploaded video temporarily (relative to project root)
         input_video_path = "temp_input_video.mp4"
         with open(input_video_path, "wb") as f:
