@@ -9,17 +9,28 @@ import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
 import VideoLoadingScreen from "../components/VideoLoadingScreen";
 
+// Template preview images
+import template1 from "../templates/template1.png";
+import template2 from "../templates/template2.png";
+import template3 from "../templates/template3.png";
+import template4 from "../templates/template4.png";
+import template5 from "../templates/template5.png";
+
+// Instagram logo PNG
+import instagramIcon from "../templates/instagram.png";
+
 export default function Generator() {
   const [message, setMessage] = useState("");
   const [file, setFile] = useState(null);
   const [generatedVideo, setGeneratedVideo] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [selectedTemplate, setSelectedTemplate] = useState("template1");
   const { user } = useAuth();
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
-    if (selectedFile && selectedFile.type.startsWith('video/')) {
+    if (selectedFile && selectedFile.type.startsWith("video/")) {
       setFile(selectedFile);
       setError(null);
     } else {
@@ -31,7 +42,7 @@ export default function Generator() {
   const handleDrop = (event) => {
     event.preventDefault();
     const droppedFile = event.dataTransfer.files[0];
-    if (droppedFile && droppedFile.type.startsWith('video/')) {
+    if (droppedFile && droppedFile.type.startsWith("video/")) {
       setFile(droppedFile);
       setError(null);
     } else {
@@ -45,13 +56,8 @@ export default function Generator() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!file) {
-      setError("Please select a video file");
-      return;
-    }
-
-    if (!message.trim()) {
-      setError("Please enter a prompt");
+    if (!file || !message.trim()) {
+      setError("Please upload a video file and enter a prompt.");
       return;
     }
 
@@ -63,6 +69,7 @@ export default function Generator() {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("prompt", message);
+      formData.append("template", selectedTemplate);
       formData.append("negative_prompt", "");
       formData.append("num_inference_steps", "20");
       formData.append("guidance_scale", "7.5");
@@ -70,119 +77,155 @@ export default function Generator() {
       formData.append("fps", "24");
       formData.append("seed", Math.floor(Math.random() * 1000000));
 
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No authentication token found. Please log in.');
-      }
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No authentication token found. Please log in.");
 
-      const response = await axios.post(
-        "http://127.0.0.1:8000/api/video/generate",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            "Authorization": `Bearer ${token}`
-          },
-        }
-      );
+      const response = await axios.post("http://127.0.0.1:8000/api/video/generate", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      if (response.data && response.data.video_url) {
+      if (response.data?.video_url) {
         setGeneratedVideo(response.data.video_url);
       } else {
         throw new Error("Invalid response from server");
       }
     } catch (error) {
-      console.error("Error generating video:", error);
-      if (error.response?.status === 403) {
-        setError("Authentication failed. Please log in again.");
-      } else if (error.response?.status === 401) {
-        setError("Your session has expired. Please log in again.");
-      } else if (error.response?.data?.detail) {
-        setError(error.response.data.detail);
-      } else {
-        setError(error.message || "Failed to generate video. Please try again.");
-      }
+      const msg = error.response?.data?.detail || error.message || "Failed to generate video.";
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const templates = [
+    { id: "template1", label: "Classic UC Davis", image: template1 },
+    { id: "template2", label: "Play of the Week", image: template2 },
+    { id: "template3", label: "Senior Spotlight", image: template3 },
+    { id: "template4", label: "Player of the Week", image: template4 },
+    { id: "template5", label: "Blank Template", image: template5 },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-[#002855] mb-8">Highlight Generator</h1>
-        <Card className="max-w-3xl mx-auto">
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-10">
+        <h2 className="text-4xl font-extrabold text-[#002855] text-center">Highlight Generator</h2>
+        <p className="text-lg font-bold text-[#002855] text-center leading-snug mt-2 mb-10 max-w-2xl mx-auto">
+          Upload your game footage, pick a highlight style, and enter a prompt. <br />
+          Our AI will generate a shareable soccer highlight in seconds.
+        </p>
+
+        <Card className="max-w-3xl mx-auto shadow-xl border-[#002855]">
           <div className="p-6">
-            <div className="mb-6">
-              <h2 className="text-2xl font-semibold mb-4 text-[#002855]">Create Highlights</h2>
-              <div
-                className={`border-2 border-dashed rounded-lg p-8 text-center ${
-                  error && !file ? 'border-red-500' : 'border-[#002855]'
-                }`}
-                onDrop={handleDrop}
-                onDragOver={handleDragOver}
-              >
-                {file ? (
-                  <div className="text-center">
-                    <p className="text-green-600 mb-2">File selected: {file.name}</p>
-                    <Button onClick={() => setFile(null)} variant="outline" disabled={isLoading}>
-                      Remove File
-                    </Button>
+            {/* File Upload Section */}
+            <div
+              className="border-2 border-dashed rounded-xl p-8 text-center"
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+            >
+              {file ? (
+                <>
+                  <p className="text-green-600 font-medium mb-2">📁 {file.name}</p>
+                  <Button variant="outline" onClick={() => setFile(null)} disabled={isLoading}>
+                    Remove File
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Upload className="w-10 h-10 mx-auto text-[#002855]" />
+                  <p className="text-sm text-gray-600 mt-2 mb-4">Drag & drop a video or click below</p>
+                  <input type="file" accept="video/*" onChange={handleFileChange} className="hidden" id="video-upload" />
+                  <Button onClick={() => document.getElementById("video-upload").click()} disabled={isLoading}>
+                    Choose File
+                  </Button>
+                </>
+              )}
+            </div>
+
+            {/* Template Selection */}
+            <div className="mt-6">
+              <label className="block text-sm font-medium text-[#002855] mb-2">Choose Template</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {templates.map((template) => (
+                  <div
+                    key={template.id}
+                    onClick={() => setSelectedTemplate(template.id)}
+                    className={`cursor-pointer border-2 rounded-lg overflow-hidden transition hover:shadow-md ${
+                      selectedTemplate === template.id ? "border-[#FFBF00] ring-2 ring-[#002855]" : "border-gray-300"
+                    }`}
+                  >
+                    <img src={template.image} alt={template.label} className="w-full h-40 object-contain bg-white" />
+                    <div className="text-center p-2 bg-white text-sm font-semibold text-[#002855]">
+                      {template.label}
+                    </div>
                   </div>
-                ) : (
-                  <>
-                    <Upload className="w-12 h-12 mx-auto text-[#002855] mb-4" />
-                    <p className="text-gray-600 mb-2">Drag and drop your video files here</p>
-                    <p className="text-sm text-gray-500 mb-4">or</p>
-                    <input
-                      type="file"
-                      accept="video/*"
-                      onChange={handleFileChange}
-                      className="hidden"
-                      id="video-upload"
-                      disabled={isLoading}
-                    />
-                    <Button onClick={() => document.getElementById("video-upload").click()} disabled={isLoading}>
-                      Choose File
-                    </Button>
-                  </>
-                )}
+                ))}
+
+                {/* Dummy "Add Your Own Template" */}
+                <div
+                  onClick={() => alert("Coming soon!")}
+                  className="col-span-1 sm:col-span-2 lg:col-span-1 mx-auto cursor-not-allowed border-2 border-dashed rounded-lg overflow-hidden flex items-center justify-center h-40 bg-gray-100 text-[#002855] text-center font-semibold hover:opacity-75 transition"
+                >
+                  + Add Your Own Template
+                </div>
               </div>
             </div>
-            <div className="flex gap-2">
-              <Input
-                placeholder="Type your instructions for the highlight clip..."
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                className="flex-1"
-                disabled={isLoading}
-              />
-              <Button
-                size="icon"
-                className="bg-[#002855] hover:bg-[#003366]"
-                disabled={!file || !message || isLoading}
-                onClick={handleSubmit}
-              >
-                <Send className="h-4 w-4" />
-                <span className="sr-only">Send</span>
-              </Button>
+
+            {/* Prompt + Submit */}
+            <div className="flex justify-center mt-6">
+              <div className="flex w-full max-w-2xl gap-2">
+                <Input
+                  placeholder="Write your caption prompt..."
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  disabled={isLoading}
+                  className="flex-1"
+                />
+                <Button size="icon" onClick={handleSubmit} disabled={!file || !message || isLoading}>
+                  <Send className="w-5 h-5" />
+                </Button>
+              </div>
             </div>
 
-            {error && (
-              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-600">{error}</p>
-              </div>
-            )}
-
+            {/* Error / Loading / Result */}
+            {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
             {isLoading && <VideoLoadingScreen />}
 
             {generatedVideo && !isLoading && (
-              <div className="mt-8">
-                <h3 className="text-xl font-semibold text-[#002855] mb-4">Generated Video</h3>
-                <video controls className="w-full rounded-lg shadow-lg">
+              <div className="mt-6 flex flex-col items-center gap-4">
+                <video controls className="w-full rounded-lg">
                   <source src={generatedVideo} type="video/mp4" />
-                  Your browser does not support the video tag.
                 </video>
+
+                {/* Download + Instagram buttons */}
+                <div className="flex items-center gap-4 mt-2">
+                  <a
+                    href={generatedVideo}
+                    download
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-5 py-2 bg-[#FFBF00] text-[#002855] font-semibold rounded hover:bg-[#FFD700] transition"
+                  >
+                    Download
+                  </a>
+
+                  <a
+                    href="https://www.instagram.com/"
+                    download
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center w-10 h-10"
+                    aria-label="Download for Instagram"
+                  >
+                    <img src={instagramIcon} alt="Instagram" className="w-11 h-11" />
+                  </a>
+                </div>
+
+                <p className="text-sm text-gray-600 text-center max-w-sm">
+                  Once downloaded, open Instagram and upload your video as a Reel or Story.
+                </p>
               </div>
             )}
           </div>

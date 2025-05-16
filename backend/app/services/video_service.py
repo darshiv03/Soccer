@@ -3,52 +3,50 @@ import os
 import time
 import subprocess
 import uuid
-import openai  
+import openai
 from openai import OpenAI
-
+from PIL import ImageFont, ImageDraw, Image
+import numpy as np
+import unicodedata
 
 # Determine the project root directory.
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+
 def generate_caption(user_prompt):
     prompt = (
-        "Write a short, professional Instagram caption (1-2 sentences) for a D1 college soccer highlight clip from UC Davis. The tone should match high-level football accounts like the Premier League or Champions League. Make it VERY energetic, confident, and focused on the moment — no emojis, no hashtags. Highlight the action (goal, assist, tackle, save, etc.) and its impact on the game. Insert a line break (\n) every 8-9 words in the caption to improve visual structure."
+        "Write a short, professional Instagram caption (1-2 sentences and under 200 words) for a D1 college soccer highlight clip from UC Davis. "
+        "The tone should match high-level football accounts like the Premier League or Champions League. "
+        "Make it VERY energetic, confident, and focused on the moment — no emojis, no hashtags. "
+        "Highlight the action (goal, assist, tackle, save, etc.) and its impact on the game. "
+        "Insert a line break (\\n) every 7-8 words or 50 characters max (new line after word is complete only) (max 4 lines only!!!!) in the caption to improve visual structure. "
+        "Make 100% sure it has no emojis or hashtags. No characters other than text!!!!very important."
         + user_prompt
     )
-    Api_Key = "[insert api key]"
-    client = OpenAI(api_key= Api_Key)  # Replace with your actual API key
-    print("Delete: Before response")
+    Api_Key = ["insert your api key here"]  # Replace with your actual API key
+    client = OpenAI(api_key=Api_Key)
+    print("Generating caption...")
     response = client.chat.completions.create(
-        model="gpt-4.1",  
+        model="gpt-4.1",
         messages=[
             {"role": "system", "content": "You are a sports caption writer for Instagram."},
             {"role": "user", "content": prompt}
         ]
     )
-    print(f"Generated string {response.choices[0].message.content}")
-    return response.choices[0].message.content
+    caption = response.choices[0].message.content
+    print(f"Generated string: {caption}")
+    return caption
 
 def create_templated_video(input_video_path, text_string, output_path, template_path, video_pos=(100, 1150)):
     try:
-        # Debug logging for text_string
-        print(f"Received text_string: '{text_string}'")
-        print(f"Text string type: {type(text_string)}")
-        print(f"Text string length: {len(text_string) if text_string else 0}")
-        
-        # Convert provided paths (relative to project root) to absolute paths
         input_video_path = os.path.join(BASE_DIR, input_video_path)
         template_path = os.path.join(BASE_DIR, template_path)
-        
-        # Prepare the output directory and generate a unique final filename.
         output_dir = os.path.dirname(os.path.join(BASE_DIR, output_path))
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-        unique_id = uuid.uuid4().hex
-        final_output = os.path.join(output_dir, f"generated_output_video_{unique_id}.mp4")
-        
-        # Define target resolution
+        os.makedirs(output_dir, exist_ok=True)
+        final_output = os.path.join(output_dir, f"generated_output_video_{uuid.uuid4().hex}.mp4")
+
         target_width, target_height = 1080, 1350
 
-        # Load and process the template image.
+        # Load template
         if not os.path.exists(template_path):
             raise Exception(f"Template image not found at: {template_path}")
         template_img = cv2.imread(template_path, cv2.IMREAD_UNCHANGED)
@@ -58,7 +56,7 @@ def create_templated_video(input_video_path, text_string, output_path, template_
         if template_img.shape[2] == 4:
             template_img = cv2.cvtColor(template_img, cv2.COLOR_BGRA2BGR)
 
-        # Open the input video.
+        # Open video
         cap = cv2.VideoCapture(input_video_path)
         if not cap.isOpened():
             raise Exception("Failed to open input video")
@@ -66,112 +64,89 @@ def create_templated_video(input_video_path, text_string, output_path, template_
         input_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         input_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         aspect_ratio = input_width / input_height
-        print(f"Video loaded with FPS: {fps}, Resolution: {input_width}x{input_height}")
 
-        # Calculate overlay dimensions while preserving aspect ratio.
         overlay_width = 920
         overlay_height = int(overlay_width / aspect_ratio)
-        if overlay_width > target_width:
-            overlay_width = target_width
-            overlay_height = int(overlay_width / aspect_ratio)
-        if overlay_height > target_height:
-            overlay_height = target_height
-            overlay_width = int(overlay_height * aspect_ratio)
+        overlay_width = min(overlay_width, target_width)
+        overlay_height = min(overlay_height, target_height)
 
-        # Write the video using OpenCV to a temporary file.
         temp_output = os.path.join(output_dir, "temp_generated_video.mp4")
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        out = cv2.VideoWriter(temp_output, fourcc, fps, (target_width, target_height))
-        print(f"Video creation started. Saving to temporary file: {temp_output}")
+        out = cv2.VideoWriter(temp_output, cv2.VideoWriter_fourcc(*'mp4v'), fps, (target_width, target_height))
+        print(f"Saving video to: {temp_output}")
+
+        text_string = generate_caption(text_string)
+        text_string = text_string.replace('\\n', '\n')
+        text_string = unicodedata.normalize("NFKD", text_string)
+        lines = text_string.split('\n')
+
+        font_path = os.path.join(BASE_DIR, "static/fonts/Roboto_Condensed-Bold.ttf")
+        if not os.path.exists(font_path):
+            raise Exception(f"Font file not found at: {font_path}")
+        font = ImageFont.truetype(font_path, size=45)
 
         frame_count = 0
-
-        # Replace literal '\n' with actual newlines if they exist
-        text_string = generate_caption(text_string)
-
-                
-        text_string = text_string.replace('\\n', '\n')
-            # Split by actual newlines
-        lines = text_string.split('\n')
 
         while True:
             ret, frame = cap.read()
             if not ret:
-                print(f"Finished processing at frame count: {frame_count}")
                 break
-            # Resize the frame for overlay and prepare the result frame.
+
             overlay_video = cv2.resize(frame, (overlay_width, overlay_height))
             result = template_img.copy()
             y1, y2 = video_pos[1], video_pos[1] + overlay_video.shape[0]
             x1, x2 = video_pos[0], video_pos[0] + overlay_video.shape[1]
             result[y1:y2, x1:x2] = overlay_video
 
-            # Text handling exactly as in version 1
-            # Define text position
-            text_pos = (10, 900)
-            
-            # Split the text into multiple lines and handle newlines
+            # Convert frame to PIL
+            result_pil = Image.fromarray(cv2.cvtColor(result, cv2.COLOR_BGR2RGB))
+            draw = ImageDraw.Draw(result_pil)
 
-            if text_string:
-                y_offset = text_pos[1]
-                for line in lines:
-                    if line.strip():  # Only process non-empty lines
-                        text_size = cv2.getTextSize(line, cv2.FONT_HERSHEY_SIMPLEX, 1, 3)[0]
-                        text_x = (target_width - text_size[0]) // 2
-                        cv2.putText(result, line, (text_x, y_offset), 
-                                   cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
-                        y_offset += 40  # Adjust the offset for the next line
+            # Draw each line
+            y_offset = 820
+            for line in lines:
+                if line.strip():
+                    bbox = draw.textbbox((0, 0), line, font=font)
+                    text_width = bbox[2] - bbox[0]
+                    text_x = (target_width - text_width) // 2
+                    draw.text((text_x, y_offset), line, font=font, fill=(255, 255, 255))
+                    y_offset += 70
 
+            result = cv2.cvtColor(np.array(result_pil), cv2.COLOR_RGB2BGR)
             out.write(result)
+
             frame_count += 1
             if frame_count % 100 == 0:
                 print(f"Processed {frame_count} frames...")
+
         out.release()
         cap.release()
         cv2.destroyAllWindows()
 
-        # Wait until the temporary file is stable (all data flushed).
-        stable = False
-        prev_size = -1
+        # Ensure file is flushed
+        prev_size, stable = -1, False
         while not stable:
             time.sleep(0.1)
             current_size = os.path.getsize(temp_output)
-            if current_size == prev_size:
-                stable = True
+            stable = current_size == prev_size
             prev_size = current_size
-        print("Finished writing temporary video file.")
 
-        # Re-encode the temporary video with FFmpeg to ensure proper streaming metadata.
-        ffmpeg_cmd = [
-            "ffmpeg",
-            "-y",                    # Overwrite output without prompt.
-            "-i", temp_output,       # Input file.
-            "-c:v", "libx264",       # Re-encode video to H.264.
-            "-profile:v", "baseline",# Use baseline profile for compatibility.
-            "-level", "3.0",
-            "-pix_fmt", "yuv420p",   # Ensure compatibility.
-            "-preset", "fast",
-            "-crf", "22",            # Quality setting.
-            "-movflags", "+faststart", # Move moov atom to the beginning.
-            final_output             # Final output file.
+        # Re-encode with ffmpeg
+        final_ffmpeg_cmd = [
+            "ffmpeg", "-y", "-i", temp_output,
+            "-c:v", "libx264", "-profile:v", "baseline", "-level", "3.0",
+            "-pix_fmt", "yuv420p", "-preset", "fast", "-crf", "22",
+            "-movflags", "+faststart", final_output
         ]
-        print("Running FFmpeg for re-encoding...")
-        ffmpeg_result = subprocess.run(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        if ffmpeg_result.returncode != 0:
-            err_msg = ffmpeg_result.stderr.decode()
-            print("FFmpeg error:", err_msg)
-            raise Exception("FFmpeg re-encoding failed: " + err_msg)
-        # Remove the temporary file.
+        print("Running ffmpeg re-encoding...")
+        subprocess.run(final_ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         os.remove(temp_output)
-        print("Final video created at:", final_output)
+
+        print(f"Final video created: {final_output}")
         return final_output
 
     except Exception as e:
         print(f"An error occurred in create_templated_video: {str(e)}")
-        if 'cap' in locals():
-            cap.release()
-        if 'out' in locals():
-            out.release()
+        if 'cap' in locals(): cap.release()
+        if 'out' in locals(): out.release()
         cv2.destroyAllWindows()
         raise e
-

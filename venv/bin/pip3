@@ -1,4 +1,4 @@
-#!/Users/rohankaushal/Desktop/Soccer/venv/bin/python3.12
+#!/Users/darshan/Documents/GitHub/Soccer/venv/bin/python3.11
 # -*- coding: utf-8 -*-
 import re
 import sys
