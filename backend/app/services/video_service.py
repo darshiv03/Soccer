@@ -14,7 +14,7 @@ def generate_caption(user_prompt):
         "Write a short, professional Instagram caption (1-2 sentences) for a D1 college soccer highlight clip from UC Davis. The tone should match high-level football accounts like the Premier League or Champions League. Make it VERY energetic, confident, and focused on the moment — no emojis, no hashtags. Highlight the action (goal, assist, tackle, save, etc.) and its impact on the game. Insert a line break (\n) every 8-9 words in the caption to improve visual structure."
         + user_prompt
     )
-    Api_Key = "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"
+    Api_Key = "[insert api key]"
     client = OpenAI(api_key= Api_Key)  # Replace with your actual API key
     print("Delete: Before response")
     response = client.chat.completions.create(
