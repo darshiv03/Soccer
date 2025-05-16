@@ -3,12 +3,38 @@ import os
 import time
 import subprocess
 import uuid
+import openai  
+from openai import OpenAI
+
 
 # Determine the project root directory.
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+def generate_caption(user_prompt):
+    prompt = (
+        "CREATE AN AMAZING CAPTION FOR AN INSTAGRAM POST OF UC DAVIS SOCCER GOAL "
+        "LIKE THE ONES ON THE PREMIER LEAGUE INSTAGRAM POSTS BASED ON THE FACT THAT "
+        + user_prompt
+    )
+    Api_Key = "[INSERT API KEY FROM OUR MESSAGES]"
+    client = OpenAI(api_key= Api_Key)  # Replace with your actual API key
+    
+    response = client.chat.completions.create(
+        model="gpt-4.1",  
+        messages=[
+            {"role": "system", "content": "You are a sports caption writer for Instagram."},
+            {"role": "user", "content": prompt}
+        ]
+    )
+    
+    return response.choices[0].message.content
 
 def create_templated_video(input_video_path, text_string, output_path, template_path, video_pos=(100, 1150)):
     try:
+        # Debug logging for text_string
+        print(f"Received text_string: '{text_string}'")
+        print(f"Text string type: {type(text_string)}")
+        print(f"Text string length: {len(text_string) if text_string else 0}")
+        
         # Convert provided paths (relative to project root) to absolute paths
         input_video_path = os.path.join(BASE_DIR, input_video_path)
         template_path = os.path.join(BASE_DIR, template_path)
@@ -71,7 +97,29 @@ def create_templated_video(input_video_path, text_string, output_path, template_
             y1, y2 = video_pos[1], video_pos[1] + overlay_video.shape[0]
             x1, x2 = video_pos[0], video_pos[0] + overlay_video.shape[1]
             result[y1:y2, x1:x2] = overlay_video
-            cv2.putText(result, text_string, video_pos, cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, cv2.LINE_AA)
+
+            # Text handling exactly as in version 1
+            # Define text position
+            text_pos = (10, 900)
+            
+            # Split the text into multiple lines and handle newlines
+
+            if text_string:
+                # Replace literal '\n' with actual newlines if they exist
+                text_string = generate_caption(text_string)
+                
+                text_string = text_string.replace('\\n', '\n')
+                # Split by actual newlines
+                lines = text_string.split('\n')
+                y_offset = text_pos[1]
+                for line in lines:
+                    if line.strip():  # Only process non-empty lines
+                        text_size = cv2.getTextSize(line, cv2.FONT_HERSHEY_SIMPLEX, 1, 3)[0]
+                        text_x = (target_width - text_size[0]) // 2
+                        cv2.putText(result, line, (text_x, y_offset), 
+                                   cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
+                        y_offset += 40  # Adjust the offset for the next line
+
             out.write(result)
             frame_count += 1
             if frame_count % 100 == 0:
