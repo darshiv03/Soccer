@@ -3,6 +3,7 @@ import os
 import time
 import subprocess
 import uuid
+import numpy as np
 
 # Determine the project root directory.
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -77,24 +78,33 @@ def create_templated_video(input_video_path, text_string, output_path, template_
             x1, x2 = video_pos[0], video_pos[0] + overlay_video.shape[1]
             result[y1:y2, x1:x2] = overlay_video
 
-            # Text handling exactly as in version 1
-            # Define text position
-            text_pos = (10, 900)
-            
-            # Split the text into multiple lines and handle newlines
+            # Enhanced text handling
             if text_string:
                 # Replace literal '\n' with actual newlines if they exist
                 text_string = text_string.replace('\\n', '\n')
                 # Split by actual newlines
                 lines = text_string.split('\n')
+                
+                # Define text position
+                text_pos = (10, 900)
                 y_offset = text_pos[1]
+                
+                # Draw text with enhanced aesthetics
                 for line in lines:
                     if line.strip():  # Only process non-empty lines
-                        text_size = cv2.getTextSize(line, cv2.FONT_HERSHEY_SIMPLEX, 1, 3)[0]
+                        # Calculate text size for centering
+                        text_size = cv2.getTextSize(line, cv2.FONT_HERSHEY_DUPLEX, 1.2, 2)[0]
                         text_x = (target_width - text_size[0]) // 2
+                        
+                        # Draw text shadow
+                        cv2.putText(result, line, (text_x + 2, y_offset + 2), 
+                                   cv2.FONT_HERSHEY_DUPLEX, 1.2, (0, 0, 0), 4, cv2.LINE_AA)
+                        
+                        # Draw main text
                         cv2.putText(result, line, (text_x, y_offset), 
-                                   cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv2.LINE_AA)
-                        y_offset += 40  # Adjust the offset for the next line
+                                   cv2.FONT_HERSHEY_DUPLEX, 1.2, (255, 255, 255), 2, cv2.LINE_AA)
+                        
+                        y_offset += 40  # Original spacing between lines
 
             out.write(result)
             frame_count += 1
