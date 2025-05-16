@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext(null);
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+export const AuthProvider = ({ children }) => { 
+  const [user, setUser] = useState(null) ;
   const [loading, setLoading] = useState(true);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const navigate = useNavigate();
