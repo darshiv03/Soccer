@@ -6,45 +6,104 @@ import { Card } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Send, Upload } from "lucide-react";
 import axios from "axios";
+import { useAuth } from "../contexts/AuthContext";
+import VideoLoadingScreen from "../components/VideoLoadingScreen";
 
 export default function Generator() {
   const [message, setMessage] = useState("");
   const [file, setFile] = useState(null);
   const [generatedVideo, setGeneratedVideo] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const { user } = useAuth();
 
   const handleFileChange = (event) => {
-    setFile(event.target.files[0]);
+    const selectedFile = event.target.files[0];
+    if (selectedFile && selectedFile.type.startsWith('video/')) {
+      setFile(selectedFile);
+      setError(null);
+    } else {
+      setError("Please select a valid video file");
+      setFile(null);
+    }
   };
 
   const handleDrop = (event) => {
     event.preventDefault();
-    setFile(event.dataTransfer.files[0]);
+    const droppedFile = event.dataTransfer.files[0];
+    if (droppedFile && droppedFile.type.startsWith('video/')) {
+      setFile(droppedFile);
+      setError(null);
+    } else {
+      setError("Please drop a valid video file");
+    }
   };
 
   const handleDragOver = (event) => {
     event.preventDefault();
   };
 
-  const handleSubmit = async () => {
-    if (!file || !message) return;
-    const formData = new FormData();
-    formData.append("video_file", file);
-    formData.append("text_string", message);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!file) {
+      setError("Please select a video file");
+      return;
+    }
+
+    if (!message.trim()) {
+      setError("Please enter a prompt");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    setGeneratedVideo(null);
+
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/generate_video/', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      console.log("API response:", response.data);
-      if (response.data.video_url) {
-        // Append a timestamp for cache busting.
-        const videoUrl = response.data.video_url + `?t=${Date.now()}`;
-        console.log("Received unique video URL:", videoUrl);
-        setGeneratedVideo(videoUrl);
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("prompt", message);
+      formData.append("negative_prompt", "");
+      formData.append("num_inference_steps", "20");
+      formData.append("guidance_scale", "7.5");
+      formData.append("num_frames", "24");
+      formData.append("fps", "24");
+      formData.append("seed", Math.floor(Math.random() * 1000000));
+
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found. Please log in.');
+      }
+
+      const response = await axios.post(
+        "http://127.0.0.1:8000/api/video/generate",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            "Authorization": `Bearer ${token}`
+          },
+        }
+      );
+
+      if (response.data && response.data.video_url) {
+        setGeneratedVideo(response.data.video_url);
       } else {
-        console.error("Error generating video", response.data);
+        throw new Error("Invalid response from server");
       }
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error generating video:", error);
+      if (error.response?.status === 403) {
+        setError("Authentication failed. Please log in again.");
+      } else if (error.response?.status === 401) {
+        setError("Your session has expired. Please log in again.");
+      } else if (error.response?.data?.detail) {
+        setError(error.response.data.detail);
+      } else {
+        setError(error.message || "Failed to generate video. Please try again.");
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -57,14 +116,16 @@ export default function Generator() {
             <div className="mb-6">
               <h2 className="text-2xl font-semibold mb-4 text-[#002855]">Create Highlights</h2>
               <div
-                className="border-2 border-dashed border-[#002855] rounded-lg p-8 text-center"
+                className={`border-2 border-dashed rounded-lg p-8 text-center ${
+                  error && !file ? 'border-red-500' : 'border-[#002855]'
+                }`}
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
               >
                 {file ? (
                   <div className="text-center">
                     <p className="text-green-600 mb-2">File selected: {file.name}</p>
-                    <Button onClick={() => setFile(null)} variant="outline">
+                    <Button onClick={() => setFile(null)} variant="outline" disabled={isLoading}>
                       Remove File
                     </Button>
                   </div>
@@ -79,8 +140,9 @@ export default function Generator() {
                       onChange={handleFileChange}
                       className="hidden"
                       id="video-upload"
+                      disabled={isLoading}
                     />
-                    <Button onClick={() => document.getElementById("video-upload").click()}>
+                    <Button onClick={() => document.getElementById("video-upload").click()} disabled={isLoading}>
                       Choose File
                     </Button>
                   </>
@@ -93,37 +155,38 @@ export default function Generator() {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 className="flex-1"
+                disabled={isLoading}
               />
               <Button
                 size="icon"
                 className="bg-[#002855] hover:bg-[#003366]"
-                disabled={!file || !message}
+                disabled={!file || !message || isLoading}
                 onClick={handleSubmit}
               >
                 <Send className="h-4 w-4" />
                 <span className="sr-only">Send</span>
               </Button>
             </div>
+
+            {error && (
+              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-600">{error}</p>
+              </div>
+            )}
+
+            {isLoading && <VideoLoadingScreen />}
+
+            {generatedVideo && !isLoading && (
+              <div className="mt-8">
+                <h3 className="text-xl font-semibold text-[#002855] mb-4">Generated Video</h3>
+                <video controls className="w-full rounded-lg shadow-lg">
+                  <source src={generatedVideo} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+            )}
           </div>
         </Card>
-
-        {generatedVideo && (
-          <div className="mt-8 text-center">
-            <h2 className="text-xl font-semibold text-[#002855] mb-4">Generated Video</h2>
-            <video
-              key={generatedVideo}
-              crossOrigin="anonymous"
-              controls
-              preload="auto"
-              className="w-full max-w-4xl mx-auto"
-              onLoadedData={() => console.log("Video loaded")}
-              onError={(e) => console.error("Video error:", e.target.error)}
-            >
-              <source src={generatedVideo} type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
-          </div>
-        )}
       </div>
     </div>
   );

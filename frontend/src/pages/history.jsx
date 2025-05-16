@@ -4,16 +4,23 @@ import { useEffect, useState } from "react";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import axios from "axios";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function History() {
   const [history, setHistory] = useState([]);
   const [expandedVideo, setExpandedVideo] = useState(null); // Track expanded state
+  const { user } = useAuth();
 
   useEffect(() => {
     // Fetch history from the backend
     const fetchHistory = async () => {
       try {
-        const response = await axios.get("http://127.0.0.1:8000/api/history/");
+        const token = localStorage.getItem('token');
+        const response = await axios.get("http://127.0.0.1:8000/api/history/", {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
         if (response.data && Array.isArray(response.data)) {
           setHistory(response.data);
         } else {
