@@ -37,22 +37,6 @@ npm install
 npm run start
 ```
 ---
-## 📂 Project Structure
-
-```
-UCClip/
-├── backend/              # FastAPI backend
-│   ├── app/
-│   │   ├── main.py       # FastAPI entrypoint
-│   │   └── utils/        # Video processing utils
-│   └── requirements.txt
-├── frontend/             # React + Tailwind frontend
-│   ├── src/
-│   └── public/
-└── README.md
-```
-
----
 
 ## 🎯 Features
 
