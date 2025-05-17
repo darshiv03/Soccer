@@ -29,6 +29,9 @@ python3 -m venv venv
 source venv/bin/activate
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
+> ⚠️ **Important:**  
+> In `backend/app/utils/video_service.py`, replace the placeholder in `Api_Key = "..."` with your actual [OpenAI API key](https://platform.openai.com/account/api-keys).
+
 ---
 ### 📦 **Frontend Setup**
 
@@ -53,14 +56,4 @@ Current version supports 4 caption overlay templates (more to come).
 Choose a style during upload to personalize your video.
 
 ---
-
-## 🤝 Contributing
-
-Pull requests are welcome! Please open an issue first to discuss major changes.
-
----
-
-## 📃 License
-
-MIT License
 
