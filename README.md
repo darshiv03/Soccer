@@ -28,16 +28,55 @@ pip install python-multipart
 python3 -m venv venv
 source venv/bin/activate
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
-
+```
 ---
 ### 📦 **Frontend Setup**
 
 ```bash
-cd backend
-pip install -r requirements.txt
-pip install python-multipart
-python3 -m venv venv
-source venv/bin/activate
-uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+npm install
+npm run start
+```
+---
+## 📂 Project Structure
 
+```
+UCClip/
+├── backend/              # FastAPI backend
+│   ├── app/
+│   │   ├── main.py       # FastAPI entrypoint
+│   │   └── utils/        # Video processing utils
+│   └── requirements.txt
+├── frontend/             # React + Tailwind frontend
+│   ├── src/
+│   └── public/
+└── README.md
+```
+
+---
+
+## 🎯 Features
+
+- Upload full match footage
+- Select visual templates
+- Generate short highlight clips with styled captions
+- Download or share outputs
+
+---
+
+## 📸 Templates
+
+Current version supports 4 caption overlay templates (more to come).  
+Choose a style during upload to personalize your video.
+
+---
+
+## 🤝 Contributing
+
+Pull requests are welcome! Please open an issue first to discuss major changes.
+
+---
+
+## 📃 License
+
+MIT License
 
