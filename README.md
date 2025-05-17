@@ -1,6 +1,6 @@
 # 🎬 UCClip
 
-**UCClip** is a web app that generates highlight videos for UC Davis soccer matches. Users can upload footage and overlay professionally styled captions using custom templates. Built with a React + Tailwind frontend and a FastAPI backend.
+**UCClip** is a web app that generates highlight videos for UC Davis soccer matches. Users can upload footage and overlay professionally styled, AI-generated captions using custom templates. Built with a React + Tailwind frontend and a FastAPI backend.
 
 ---
 
