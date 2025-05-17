@@ -29,3 +29,15 @@ python3 -m venv venv
 source venv/bin/activate
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 
+---
+### 📦 **Frontend Setup**
+
+```bash
+cd backend
+pip install -r requirements.txt
+pip install python-multipart
+python3 -m venv venv
+source venv/bin/activate
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+
+
